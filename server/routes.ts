@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
@@ -16,7 +16,8 @@ import { registerSiteEnggRoutes } from "./site-engg/routes";
 import {
   insertTicketSchema, insertCommentSchema,
   insertFaqSchema, insertChatMessageSchema, insertCategorySchema,
-  allowedDomains, insertAllowedDomainSchema
+  allowedDomains, insertAllowedDomainSchema,
+  bugReports, insertBugReportSchema
 } from "@shared/schema";
 
 
@@ -1733,6 +1734,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete category error:", error);
       res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Bug Reports API
+  app.get("/api/bug-reports", isAuthenticated, async (req, res) => {
+    try {
+      const reports = await db.select({
+        id: bugReports.id,
+        title: bugReports.title,
+        description: bugReports.description,
+        severity: bugReports.severity,
+        status: bugReports.status,
+        reportedById: bugReports.reportedById,
+        createdAt: bugReports.createdAt,
+        updatedAt: bugReports.updatedAt,
+      }).from(bugReports);
+
+      const enriched = await Promise.all(reports.map(async (r) => {
+        let reporter = null;
+        if (r.reportedById) {
+          reporter = await storage.getUser(r.reportedById);
+        }
+        return {
+          ...r,
+          reportedBy: reporter ? { id: reporter.id, name: reporter.name } : null,
+        };
+      }));
+
+      res.json(enriched);
+    } catch (error) {
+      console.error("Bug reports error:", error);
+      res.status(500).json({ message: "Failed to fetch bug reports" });
+    }
+  });
+
+  app.post("/api/bug-reports", isAuthenticated, async (req, res) => {
+    try {
+      const { title, description, severity } = req.body;
+      if (!title || !description) {
+        return res.status(400).json({ message: "Title and description are required" });
+      }
+      const [result] = await db.insert(bugReports).values({
+        title,
+        description,
+        severity: severity || "medium",
+        status: "open",
+        reportedById: req.user?.id,
+      });
+      const created = await db.select().from(bugReports).where(eq(bugReports.id, (result as any).insertId));
+      res.status(201).json(created[0]);
+    } catch (error) {
+      console.error("Create bug report error:", error);
+      res.status(500).json({ message: "Failed to create bug report" });
+    }
+  });
+
+  app.patch("/api/bug-reports/:id", isAuthenticated, isSupportStaff, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      await db.update(bugReports).set({ status, updatedAt: new Date() }).where(eq(bugReports.id, id));
+      const updated = await db.select().from(bugReports).where(eq(bugReports.id, id));
+      if (!updated.length) return res.status(404).json({ message: "Bug report not found" });
+      res.json(updated[0]);
+    } catch (error) {
+      console.error("Update bug report error:", error);
+      res.status(500).json({ message: "Failed to update bug report" });
     }
   });
 

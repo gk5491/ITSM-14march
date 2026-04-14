@@ -169,6 +169,18 @@ export const journeyExports = mysqlTable("journey_exports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Bug Reports table
+export const bugReports = mysqlTable("bug_reports", {
+  id: int("id").primaryKey().autoincrement(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  severity: text("severity").notNull().default("medium"), // "low", "medium", "high", "critical"
+  status: text("status").notNull().default("open"), // "open", "in_progress", "resolved", "closed"
+  reportedById: int("reported_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -237,6 +249,12 @@ export const insertJourneyExportSchema = createInsertSchema(journeyExports).omit
   createdAt: true,
 });
 
+export const insertBugReportSchema = createInsertSchema(bugReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -258,6 +276,9 @@ export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 
 export type AllowedDomain = typeof allowedDomains.$inferSelect;
 export type InsertAllowedDomain = z.infer<typeof insertAllowedDomainSchema>;
+
+export type BugReport = typeof bugReports.$inferSelect;
+export type InsertBugReport = z.infer<typeof insertBugReportSchema>;
 
 // Custom types for API responses
 export type TicketWithRelations = Ticket & {

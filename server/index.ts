@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 // WebSocket disabled per user requirement - manual reload only
@@ -9,6 +10,16 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+
+// CORS for mobile app and cross-origin requests
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
+  exposedHeaders: ["set-cookie"],
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

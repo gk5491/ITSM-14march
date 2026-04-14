@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../utils/colors";
 
@@ -7,14 +7,23 @@ interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
   title: string;
   message?: string;
+  subtitle?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
-export function EmptyState({ icon = "inbox-outline", title, message }: EmptyStateProps) {
+export function EmptyState({ icon = "inbox-outline", title, message, subtitle, actionLabel, onAction }: EmptyStateProps) {
+  const desc = subtitle || message;
   return (
     <View style={styles.container}>
       <Ionicons name={icon} size={56} color={colors.textMuted} />
       <Text style={styles.title}>{title}</Text>
-      {message && <Text style={styles.message}>{message}</Text>}
+      {desc && <Text style={styles.message}>{desc}</Text>}
+      {actionLabel && onAction && (
+        <TouchableOpacity style={styles.actionBtn} onPress={onAction}>
+          <Text style={styles.actionText}>{actionLabel}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -40,5 +49,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
     lineHeight: 20,
+  },
+  actionBtn: {
+    marginTop: 20,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#fff",
   },
 });
