@@ -1,0 +1,12 @@
+<?php
+/**
+ * Domains API Wrapper for cPanel Production Environment
+ * Routes /itsm_app/php/domains to /itsm_app/php/api/domains.php
+ */
+
+// Set request data for the API
+$_REQUEST_DATA = $_REQUEST;
+
+// Include the actual domains API
+include_once __DIR__ . '/api/domains.php';
+?>

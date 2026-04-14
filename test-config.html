@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configuration Test</title>
+</head>
+<body>
+    <h1>Testing Configuration</h1>
+    <p>If you can see this page, the basic server setup is working.</p>
+    
+    <h2>Links to test:</h2>
+    <ul>
+        <li><a href="/itsm_app/">Home (should work)</a></li>
+        <li><a href="/itsm_app/tickets">Tickets (should work)</a></li>
+        <li><a href="/itsm_app/tickets/123">Ticket Detail (should work)</a></li>
+        <li><a href="/itsm_app/itsm_app/tickets/123">Double Path (should redirect to single path)</a></li>
+    </ul>
+
+    <script>
+        console.log('Current URL:', window.location.href);
+        console.log('Pathname:', window.location.pathname);
+        console.log('Base URL would be:', import.meta?.env?.BASE_URL || 'Not available in this context');
+    </script>
+</body>
+</html>

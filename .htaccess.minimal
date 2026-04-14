@@ -1,0 +1,6 @@
+RewriteEngine On
+RewriteRule ^itsm_app/itsm_app/(.*)$ /itsm_app/$1 [R=301,L]
+RewriteRule ^api/(.+)$ php/api/$1.php [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [QSA,L]
