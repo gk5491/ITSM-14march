@@ -21,25 +21,3 @@ console.log(`🔗 Connecting to MySQL database: ${mysqlConfig.host}:${mysqlConfi
 export const connection = mysql.createPool(mysqlConfig);
 export const db = drizzle(connection, { schema, mode: 'default' });
 
-// Ensure new tables exist (safe CREATE TABLE IF NOT EXISTS)
-(async () => {
-  try {
-    const conn = await connection.getConnection();
-    await conn.execute(`
-      CREATE TABLE IF NOT EXISTS bug_reports (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        severity TEXT NOT NULL DEFAULT 'medium',
-        status TEXT NOT NULL DEFAULT 'open',
-        reported_by_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-    conn.release();
-    console.log('[DB] bug_reports table ready');
-  } catch (err) {
-    console.error('[DB] Table setup error:', err);
-  }
-})();

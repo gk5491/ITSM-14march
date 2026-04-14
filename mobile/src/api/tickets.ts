@@ -109,6 +109,11 @@ export const ticketsApi = {
     return res.data;
   },
 
+  getAssigned: async (): Promise<Ticket[]> => {
+    const res = await apiClient.get("/api/tickets/assigned");
+    return res.data;
+  },
+
   getDashboard: async () => {
     const res = await apiClient.get("/api/dashboard");
     return res.data;

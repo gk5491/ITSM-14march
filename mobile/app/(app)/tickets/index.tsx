@@ -22,6 +22,8 @@ import { colors, getStatusColor, getPriorityColor } from "../../../src/utils/col
 
 const STATUS_FILTERS = ["all", "open", "in_progress", "resolved", "closed"];
 
+type TabKey = "my" | "all" | "assigned";
+
 function TicketCard({ ticket, onPress }: { ticket: Ticket; onPress: () => void }) {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
@@ -47,7 +49,7 @@ function TicketCard({ ticket, onPress }: { ticket: Ticket; onPress: () => void }
 
         <View style={styles.cardBottom}>
           <Badge
-            label={ticket.status}
+            label={ticket.status.replace("_", " ")}
             color={getStatusColor(ticket.status)}
             size="sm"
           />
@@ -57,33 +59,73 @@ function TicketCard({ ticket, onPress }: { ticket: Ticket; onPress: () => void }
             size="sm"
           />
           {ticket.category && (
-            <Text style={styles.category}>{ticket.category.name}</Text>
+            <Text style={styles.categoryChip}>{ticket.category.name}</Text>
           )}
         </View>
 
-        {ticket.assignedTo && (
-          <View style={styles.assignee}>
-            <Ionicons name="person-outline" size={12} color={colors.textMuted} />
-            <Text style={styles.assigneeText}>{ticket.assignedTo.name}</Text>
-          </View>
-        )}
+        <View style={styles.cardFooter}>
+          {ticket.createdBy && (
+            <View style={styles.metaItem}>
+              <Ionicons name="person-circle-outline" size={13} color={colors.textMuted} />
+              <Text style={styles.metaText}>{ticket.createdBy.name}</Text>
+            </View>
+          )}
+          {ticket.assignedTo && (
+            <View style={styles.metaItem}>
+              <Ionicons name="person-outline" size={13} color={colors.primary} />
+              <Text style={[styles.metaText, { color: colors.primary }]}>
+                {ticket.assignedTo.name}
+              </Text>
+            </View>
+          )}
+          {!ticket.assignedTo && (
+            <Text style={styles.unassignedText}>Unassigned</Text>
+          )}
+        </View>
       </Card>
     </TouchableOpacity>
   );
 }
 
 export default function TicketsScreen() {
-  const { isAgent } = useAuth();
+  const { user, isAgent, isAdmin } = useAuth();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<TabKey>("my");
 
-  const { data: allTickets, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["tickets", isAgent ? "all" : "my"],
-    queryFn: isAgent ? ticketsApi.getAll : ticketsApi.getMy,
+  const showAllTab = isAgent || isAdmin;
+  const showAssignedTab = isAgent || isAdmin;
+
+  const { data: myTickets, isLoading: loadingMy, refetch: refetchMy, isRefetching: refetchingMy } = useQuery({
+    queryKey: ["tickets", "my"],
+    queryFn: ticketsApi.getMy,
+    enabled: activeTab === "my",
   });
 
-  const filtered = (allTickets || []).filter((t) => {
+  const { data: allTickets, isLoading: loadingAll, refetch: refetchAll, isRefetching: refetchingAll } = useQuery({
+    queryKey: ["tickets", "all"],
+    queryFn: ticketsApi.getAll,
+    enabled: activeTab === "all",
+  });
+
+  const { data: assignedTickets, isLoading: loadingAssigned, refetch: refetchAssigned, isRefetching: refetchingAssigned } = useQuery({
+    queryKey: ["tickets", "assigned"],
+    queryFn: ticketsApi.getAssigned,
+    enabled: activeTab === "assigned" && showAssignedTab,
+  });
+
+  const getActiveData = (): Ticket[] => {
+    if (activeTab === "all") return allTickets || [];
+    if (activeTab === "assigned") return assignedTickets || [];
+    return myTickets || [];
+  };
+
+  const isLoading = activeTab === "my" ? loadingMy : activeTab === "all" ? loadingAll : loadingAssigned;
+  const isRefetching = activeTab === "my" ? refetchingMy : activeTab === "all" ? refetchingAll : refetchingAssigned;
+  const doRefetch = activeTab === "my" ? refetchMy : activeTab === "all" ? refetchAll : refetchAssigned;
+
+  const filtered = getActiveData().filter((t) => {
     const matchSearch =
       !search ||
       t.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -92,14 +134,16 @@ export default function TicketsScreen() {
     return matchSearch && matchStatus;
   });
 
-  if (isLoading) return <LoadingScreen />;
+  const tabs: { key: TabKey; label: string; icon: string }[] = [
+    { key: "my", label: "My Tickets", icon: "person-outline" },
+    ...(showAllTab ? [{ key: "all" as TabKey, label: "All Tickets", icon: "list-outline" }] : []),
+    ...(showAssignedTab ? [{ key: "assigned" as TabKey, label: "Assigned to Me", icon: "checkmark-circle-outline" }] : []),
+  ];
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {isAgent ? "All Tickets" : "My Tickets"}
-        </Text>
+        <Text style={styles.headerTitle}>Tickets</Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => router.push("/(app)/tickets/new")}
@@ -107,6 +151,27 @@ export default function TicketsScreen() {
           <Ionicons name="add" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {tabs.length > 1 && (
+        <View style={styles.tabRow}>
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={14}
+                color={activeTab === tab.key ? colors.primary : colors.textMuted}
+              />
+              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <View style={styles.searchBar}>
         <Ionicons name="search-outline" size={18} color={colors.textMuted} />
@@ -124,7 +189,7 @@ export default function TicketsScreen() {
         )}
       </View>
 
-      <View style={styles.filters}>
+      <View style={styles.filtersRow}>
         {STATUS_FILTERS.map((s) => (
           <TouchableOpacity
             key={s}
@@ -134,45 +199,46 @@ export default function TicketsScreen() {
               statusFilter === s && styles.filterChipActive,
             ]}
           >
-            <Text
-              style={[
-                styles.filterText,
-                statusFilter === s && styles.filterTextActive,
-              ]}
-            >
+            <Text style={[styles.filterText, statusFilter === s && styles.filterTextActive]}>
               {s === "all" ? "All" : s.replace("_", " ")}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TicketCard
-            ticket={item}
-            onPress={() => router.push(`/(app)/tickets/${item.id}`)}
-          />
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={colors.primary}
-          />
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="ticket-outline"
-            title="No tickets found"
-            message={
-              search ? "Try adjusting your search" : "Create a new ticket to get started"
-            }
-          />
-        }
-      />
+      {isLoading ? (
+        <LoadingScreen />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <TicketCard
+              ticket={item}
+              onPress={() => router.push(`/(app)/tickets/${item.id}`)}
+            />
+          )}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={doRefetch}
+              tintColor={colors.primary}
+            />
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="ticket-outline"
+              title="No tickets found"
+              message={
+                search ? "Try adjusting your search" :
+                activeTab === "assigned" ? "No tickets assigned to you" :
+                "Create a new ticket to get started"
+              }
+            />
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -193,12 +259,34 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 6,
   },
+  tabRow: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    gap: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  tabActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: { fontSize: 12, color: colors.textMuted, fontWeight: "600" },
+  tabTextActive: { color: colors.primary },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.surface,
-    margin: 16,
-    marginBottom: 8,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
@@ -207,16 +295,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchInput: { flex: 1, fontSize: 15, color: colors.text },
-  filters: {
+  filtersRow: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingVertical: 10,
     gap: 8,
     flexWrap: "wrap",
   },
   filterChip: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 20,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -226,7 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  filterText: { fontSize: 13, color: colors.textSecondary, fontWeight: "500" },
+  filterText: { fontSize: 12, color: colors.textSecondary, fontWeight: "500" },
   filterTextActive: { color: "#fff", fontWeight: "700" },
   list: { paddingHorizontal: 16, paddingBottom: 20 },
   ticketCard: { marginBottom: 10 },
@@ -246,8 +334,8 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 10,
   },
-  cardBottom: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  category: {
+  cardBottom: { flexDirection: "row", gap: 8, flexWrap: "wrap", marginBottom: 8 },
+  categoryChip: {
     fontSize: 11,
     color: colors.textMuted,
     backgroundColor: colors.border,
@@ -255,11 +343,16 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
   },
-  assignee: {
+  cardFooter: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 4,
-    marginTop: 8,
+    marginTop: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  assigneeText: { fontSize: 12, color: colors.textMuted },
+  metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  metaText: { fontSize: 12, color: colors.textMuted },
+  unassignedText: { fontSize: 12, color: colors.textMuted, fontStyle: "italic" },
 });
