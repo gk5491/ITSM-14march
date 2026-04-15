@@ -18,6 +18,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const roles = (user?.role || "")
+    .split(",")
+    .map((role) => role.trim().toLowerCase())
+    .filter(Boolean);
+  const hasRole = (role: string) => roles.includes(role);
 
   useEffect(() => {
     checkSession();
@@ -60,9 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
-        isAdmin: user?.role === "admin",
-        isAgent: user?.role === "agent" || user?.role === "admin",
-        isHR: user?.role === "hr" || user?.role === "admin",
+        isAdmin: hasRole("admin"),
+        isAgent: hasRole("agent") || hasRole("admin"),
+        isHR: hasRole("hr") || hasRole("admin"),
       }}
     >
       {children}

@@ -5,7 +5,7 @@ export interface User {
   username: string;
   name: string;
   email: string;
-  role: "admin" | "agent" | "user" | "hr";
+  role: "admin" | "agent" | "user" | "hr" | string;
   companyName?: string;
   department?: string;
   location?: string;
@@ -23,6 +23,16 @@ export const authApi = {
 
   getMe: async (): Promise<User> => {
     const res = await apiClient.get("/api/user");
+    return res.data;
+  },
+
+  register: async (data: {
+    username: string;
+    password: string;
+    name: string;
+    email: string;
+  }): Promise<User> => {
+    const res = await apiClient.post("/api/register", data);
     return res.data;
   },
 

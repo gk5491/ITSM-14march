@@ -83,7 +83,7 @@ export const ticketsApi = {
       categoryId: number;
     }>
   ): Promise<Ticket> => {
-    const res = await apiClient.patch(`/api/tickets/${id}`, data);
+    const res = await apiClient.put(`/api/tickets/${id}`, data);
     return res.data;
   },
 
@@ -116,6 +116,17 @@ export const ticketsApi = {
 
   getDashboard: async () => {
     const res = await apiClient.get("/api/dashboard");
-    return res.data;
+    const data = res.data || {};
+    return {
+      ...data,
+      open: data.open ?? data.openTickets ?? 0,
+      inProgress: data.inProgress ?? data.inProgressTickets ?? 0,
+      resolved: data.resolved ?? data.resolvedTickets ?? 0,
+      closed: data.closed ?? data.closedTickets ?? 0,
+      total: data.total ?? data.totalTickets ?? 0,
+      highPriority: data.highPriority ?? 0,
+      mediumPriority: data.mediumPriority ?? 0,
+      lowPriority: data.lowPriority ?? 0,
+    };
   },
 };

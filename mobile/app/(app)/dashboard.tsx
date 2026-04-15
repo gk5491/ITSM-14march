@@ -184,6 +184,12 @@ export default function DashboardScreen() {
             onPress={() => router.push("/(app)/knowledge-base")}
           />
           <QuickAction
+            icon="chatbubble-ellipses-outline"
+            label="AI Chat"
+            color="#0ea5e9"
+            onPress={() => router.push("/(app)/chatbot")}
+          />
+          <QuickAction
             icon="construct-outline"
             label="Site-Engg"
             color="#6366f1"

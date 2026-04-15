@@ -31,18 +31,32 @@ const NAV_ITEMS: NavItem[] = [
     color: "#6366f1",
   },
   {
+    icon: "chatbubble-ellipses-outline",
+    label: "AI Assistant",
+    description: "Chat with AI support bot",
+    route: "/(app)/chatbot",
+    color: "#0ea5e9",
+  },
+  {
     icon: "help-circle-outline",
     label: "Knowledge Base",
     description: "FAQs and help articles",
     route: "/(app)/knowledge-base",
-    color: "#0ea5e9",
+    color: "#10b981",
   },
   {
     icon: "document-text-outline",
     label: "Documentation",
     description: "User guides and manuals",
     route: "/(app)/documentation",
-    color: "#10b981",
+    color: "#f59e0b",
+  },
+  {
+    icon: "settings-outline",
+    label: "Settings",
+    description: "Profile and account security",
+    route: "/(app)/settings",
+    color: "#64748b",
   },
   {
     icon: "people-outline",
@@ -64,9 +78,8 @@ const NAV_ITEMS: NavItem[] = [
     icon: "bug-outline",
     label: "Bug Reports",
     description: "View and manage bugs",
-    route: "/(app)/admin/bug-reports",
+    route: "/(app)/bug-reports",
     color: "#ef4444",
-    adminOnly: true,
   },
   {
     icon: "bar-chart-outline",
@@ -140,14 +153,14 @@ export default function MoreScreen() {
           <Text style={styles.sectionLabel}>ACCOUNT</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => router.push("/(app)/profile")}
+            onPress={() => router.push("/(app)/settings")}
             activeOpacity={0.8}
           >
             <View style={[styles.linkIcon, { backgroundColor: colors.primary + "18" }]}>
               <Ionicons name="person-outline" size={18} color={colors.primary} />
             </View>
             <View style={styles.linkContent}>
-              <Text style={styles.linkLabel}>Profile Settings</Text>
+              <Text style={styles.linkLabel}>Settings</Text>
               <Text style={styles.linkDesc}>Update your account details</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />

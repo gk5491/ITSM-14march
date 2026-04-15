@@ -35,8 +35,17 @@ interface BugReport {
 }
 
 const fetchBugReports = async (): Promise<BugReport[]> => {
-  const res = await apiClient.get("/api/bug-reports");
-  return res.data;
+  const res = await apiClient.get("/api/project-bug-reports");
+  return (res.data || []).map((report: any) => ({
+    id: report.id,
+    title: `Report #${report.id}`,
+    description: report.comment || "",
+    severity: report.resolution_status === "resolved" ? "low" : "high",
+    status: report.resolution_status === "resolved" ? "resolved" : "open",
+    reportedBy: report.created_by ? { id: report.created_by, name: `User #${report.created_by}` } : undefined,
+    createdAt: report.created_at,
+    updatedAt: report.updated_at,
+  }));
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -65,7 +74,10 @@ export default function BugReportsScreen() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
-      apiClient.patch(`/api/bug-reports/${id}`, { status }),
+      apiClient.patch("/api/project-bug-reports", {
+        id,
+        resolution_status: status === "resolved" || status === "closed" ? "resolved" : "not-resolved",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bug-reports"] });
       setSelectedBug(null);
@@ -85,7 +97,7 @@ export default function BugReportsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Bug Reports</Text>
+        <Text style={styles.headerTitle}>Bug Review</Text>
       </View>
 
       {!bugs || bugs.length === 0 ? (
@@ -164,7 +176,7 @@ export default function BugReportsScreen() {
               )}
               <Text style={styles.sectionLabel}>Change Status</Text>
               <View style={styles.statusActions}>
-                {["open", "in_progress", "resolved", "closed"].map((s) => (
+                {["open", "resolved"].map((s) => (
                   <TouchableOpacity
                     key={s}
                     style={[styles.actionBtn, selectedBug.status === s && styles.actionBtnActive, { borderColor: STATUS_COLORS[s] }]}

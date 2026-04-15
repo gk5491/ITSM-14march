@@ -49,7 +49,11 @@ export const getPriorityColor = (priority: string) => {
 };
 
 export const getRoleColor = (role: string) => {
-  switch (role) {
+  const roles = role.split(",").map((item) => item.trim().toLowerCase());
+  if (roles.includes("admin")) return colors.roleAdmin;
+  if (roles.includes("agent")) return colors.roleAgent;
+  if (roles.includes("hr")) return colors.roleHR;
+  switch (roles[0]) {
     case "admin": return colors.roleAdmin;
     case "agent": return colors.roleAgent;
     case "user": return colors.roleUser;

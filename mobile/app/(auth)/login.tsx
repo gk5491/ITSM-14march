@@ -91,6 +91,22 @@ export default function LoginScreen() {
             >
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={styles.registerBtn}
+              onPress={() => router.push("/(auth)/register")}
+            >
+              <Text style={styles.registerText}>
+                New user?{" "}
+                <Text style={styles.registerBold}>Create an account</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
@@ -155,6 +171,12 @@ const styles = StyleSheet.create({
   loginBtn: { marginTop: 8 },
   forgotBtn: { marginTop: 16, alignItems: "center" },
   forgotText: { color: colors.primary, fontSize: 14, fontWeight: "600" },
+  divider: { flexDirection: "row", alignItems: "center", marginVertical: 20, gap: 10 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { fontSize: 12, color: colors.textMuted, fontWeight: "600" },
+  registerBtn: { alignItems: "center" },
+  registerText: { fontSize: 14, color: colors.textSecondary },
+  registerBold: { color: colors.primary, fontWeight: "700" },
   footer: {
     marginTop: 40,
     alignItems: "center",

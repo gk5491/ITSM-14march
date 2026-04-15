@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ViewStyle,
+  StyleProp,
   KeyboardTypeOptions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,8 +22,9 @@ interface InputProps {
   numberOfLines?: number;
   keyboardType?: KeyboardTypeOptions;
   error?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   editable?: boolean;
+  autoFocus?: boolean;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }
 
@@ -38,6 +40,7 @@ export function Input({
   error,
   style,
   editable = true,
+  autoFocus,
   autoCapitalize,
 }: InputProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -64,6 +67,7 @@ export function Input({
           numberOfLines={multiline ? numberOfLines : 1}
           keyboardType={keyboardType}
           editable={editable}
+          autoFocus={autoFocus}
           autoCapitalize={autoCapitalize}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}

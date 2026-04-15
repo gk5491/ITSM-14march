@@ -32,7 +32,7 @@ export const usersApi = {
   },
 
   changePassword: async (id: number, password: string) => {
-    const res = await apiClient.put(`/api/users/${id}/password`, { password });
+    const res = await apiClient.put(`/api/users/${id}`, { password });
     return res.data;
   },
 

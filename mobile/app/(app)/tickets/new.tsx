@@ -27,8 +27,9 @@ const PRIORITIES = [
 
 const SUPPORT_TYPES = [
   { label: "Remote", value: "remote" },
-  { label: "Onsite", value: "onsite" },
-  { label: "Hybrid", value: "hybrid" },
+  { label: "Telephonic", value: "telephonic" },
+  { label: "Onsite Visit", value: "onsite_visit" },
+  { label: "Other", value: "other" },
 ];
 
 export default function NewTicketScreen() {
@@ -74,6 +75,7 @@ export default function NewTicketScreen() {
     if (title.trim().length < 5) newErrors.title = "Title must be at least 5 characters";
     if (!description.trim()) newErrors.description = "Description is required";
     if (description.trim().length < 10) newErrors.description = "Please provide more details";
+    if (!categoryId) newErrors.categoryId = "Category is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -141,11 +143,12 @@ export default function NewTicketScreen() {
 
           {categoryOptions.length > 0 && (
             <Select
-              label="Category"
+              label="Category *"
               value={categoryId}
-              onValueChange={(v) => setCategoryId(Number(v))}
-              options={[{ label: "No Category", value: "" }, ...categoryOptions]}
-              placeholder="Select category (optional)"
+              onValueChange={(v) => setCategoryId(Number(v) || undefined)}
+              options={categoryOptions}
+              placeholder="Select category"
+              error={errors.categoryId}
             />
           )}
 

@@ -12,7 +12,7 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export function EmptyState({ icon = "inbox-outline", title, message, subtitle, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({ icon = "file-tray-outline", title, message, subtitle, actionLabel, onAction }: EmptyStateProps) {
   const desc = subtitle || message;
   return (
     <View style={styles.container}>

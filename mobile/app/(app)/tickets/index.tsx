@@ -105,7 +105,7 @@ export default function TicketsScreen() {
 
   const { data: allTickets, isLoading: loadingAll, refetch: refetchAll, isRefetching: refetchingAll } = useQuery({
     queryKey: ["tickets", "all"],
-    queryFn: ticketsApi.getAll,
+    queryFn: () => ticketsApi.getAll(),
     enabled: activeTab === "all",
   });
 
